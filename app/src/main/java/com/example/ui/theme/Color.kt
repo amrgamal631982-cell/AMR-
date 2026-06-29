@@ -2,24 +2,25 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Vibrant Palette - Professional & Athletic Light Theme Colors
-val VibrantBackground = Color(0xFFF7F9FF) // Light pale blue background
-val VibrantSurface = Color(0xFFFFFFFF) // Clean white card surface
-val VibrantBorder = Color(0xFFE0E2EC) // Soft border color
-val VibrantPrimary = Color(0xFF0061A4) // Rich vibrant athletic blue
-val VibrantPrimaryGradientEnd = Color(0xFF1D91E5) // Light gradient blue
-val VibrantSecondary = Color(0xFFD1E4FF) // Soft light blue highlight
-val VibrantTextDark = Color(0xFF001D34) // Dark navy/almost black for maximum readability
-val VibrantTextMedium = Color(0xFF43474E) // Muted medium slate for descriptions
-val VibrantTextLight = Color(0xFFF1F5F9) // White/light text inside blue cards
+// Calming, Soothing & Motivational Palette for Estiqama (استقامة)
+val VibrantBackground = Color(0xFFF9F7F2) // Warm ivory/alabaster - gentle on eyes, premium feel
+val VibrantSurface = Color(0xFFFFFFFF) // Crisp white card surfaces
+val VibrantBorder = Color(0xFFE8E5DC) // Soft warm border
+val VibrantPrimary = Color(0xFF165B54) // Deep Pine/Teal - highly calming, grounding and strong
+val VibrantPrimaryGradientEnd = Color(0xFF2E8F85) // Eucalyptus Mint - fresh life, growth, dynamic recovery
+val VibrantSecondary = Color(0xFFE5F1EE) // Soft sage highlight for comfortable active states
+val VibrantTextDark = Color(0xFF1C2C29) // Deep soft charcoal-teal for max readability without fatigue
+val VibrantTextMedium = Color(0xFF5A6F6C) // Muted slate-teal for secondary text
+val VibrantTextLight = Color(0xFFFAFBFB) // Soft white for high contrast inside gradient cards
 
-// SOS Emergency protocol colors
-val VibrantSOSBg = Color(0xFFFDE7E7) // Light red alert background
-val VibrantSOSBorder = Color(0xFFBA1A1A) // Strong alert crimson border
-val VibrantSOSText = Color(0xFF410002) // Dark blood red text
+// SOS Emergency protocol colors (Softer, less jarring but highly distinct)
+val VibrantSOSBg = Color(0xFFFAF0EE) // Gentle pastel rose background
+val VibrantSOSBorder = Color(0xFFD34F3F) // Warm terracotta red for alert boundaries
+val VibrantSOSText = Color(0xFF5A1E15) // Deep brick/maroon for clear alert messages
 
 // General supportive colors
-val AccentGreen = Color(0xFF10B981) // High-visibility habit success green
-val SoftSlate = Color(0xFF94A3B8) // Subtitles fallback
+val AccentGreen = Color(0xFF2C9C82) // Calm emerald success green
+val SoftSlate = Color(0xFF7E8F8C) // Subtitles and auxiliary text fallback
+
 
 

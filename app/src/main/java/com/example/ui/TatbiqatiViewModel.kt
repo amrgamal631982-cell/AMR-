@@ -253,12 +253,7 @@ class TatbiqatiViewModel(application: Application) : AndroidViewModel(applicatio
                 } else {
                     // Load conversation history from DB (limit last 15 messages for context speed)
                     val history = dao.getChatMessages().takeLast(15)
-                    val contentsList = history.map {
-                        Content(
-                            role = if (it.role == "user") "user" else "model",
-                            parts = listOf(Part(text = it.text))
-                        )
-                    }
+                    val contentsList = cleanChatHistoryForGemini(history)
 
                     val request = GenerateContentRequest(
                         contents = contentsList,
@@ -699,6 +694,36 @@ class TatbiqatiViewModel(application: Application) : AndroidViewModel(applicatio
             
             حافظ على طاقتك العظيمة يا وحش، أنت تصنع رجلاً حديدياً يفخر به الجميع! 🦾🚀
         """.trimIndent()
+    }
+
+    private fun cleanChatHistoryForGemini(history: List<ChatMessageEntity>): List<Content> {
+        val cleaned = mutableListOf<Content>()
+        var expectedRole = "user" // The Gemini API typically expects the first message to be "user"
+        
+        for (msg in history) {
+            val mappedRole = if (msg.role == "user") "user" else "model"
+            
+            if (cleaned.isEmpty()) {
+                // First message must be "user". If it is "model", skip it.
+                if (mappedRole == "user") {
+                    cleaned.add(Content(role = "user", parts = listOf(Part(text = msg.text))))
+                    expectedRole = "model"
+                }
+            } else {
+                if (mappedRole == expectedRole) {
+                    cleaned.add(Content(role = mappedRole, parts = listOf(Part(text = msg.text))))
+                    expectedRole = if (mappedRole == "user") "model" else "user"
+                } else {
+                    // If it is consecutive same role, append/merge the text to maintain alternation
+                    val lastIndex = cleaned.lastIndex
+                    val lastContent = cleaned[lastIndex]
+                    val currentText = lastContent.parts.firstOrNull()?.text ?: ""
+                    val newText = if (currentText.isBlank()) msg.text else "$currentText\n${msg.text}"
+                    cleaned[lastIndex] = Content(role = lastContent.role, parts = listOf(Part(text = newText)))
+                }
+            }
+        }
+        return cleaned
     }
 
     override fun onCleared() {

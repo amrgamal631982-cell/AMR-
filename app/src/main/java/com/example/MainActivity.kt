@@ -34,6 +34,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
+import com.example.data.Daily90Data
+import com.example.data.DailyContent
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -410,8 +413,8 @@ fun DashboardScreen(viewModel: TatbiqatiViewModel) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = VibrantSecondary),
-                border = BorderStroke(1.dp, Color(0xFFA6C8FF))
+                colors = CardDefaults.cardColors(containerColor = VibrantSecondary.copy(alpha = 0.4f)),
+                border = BorderStroke(1.dp, VibrantPrimary.copy(alpha = 0.2f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -428,6 +431,285 @@ fun DashboardScreen(viewModel: TatbiqatiViewModel) {
                         fontSize = 11.sp,
                         lineHeight = 17.sp,
                         fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        // 90-Day Interactive Calendar Grid
+        item {
+            var selectedCalendarDay by remember { mutableStateOf<Int?>(null) }
+            
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                border = BorderStroke(1.dp, VibrantBorder)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "تقويم الـ 90 يوماً للاستقامة 🛡️🗓️",
+                            color = VibrantTextDark,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "اضغط على أي يوم لرؤية التحدي والنصيحة",
+                            color = VibrantTextMedium,
+                            fontSize = 10.sp
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Grid of 90 days (9 rows of 10 days)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        for (row in 0 until 9) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                for (col in 1..10) {
+                                    val dayNum = row * 10 + col
+                                    val isCompleted = dayNum < currentDay
+                                    val isCurrent = dayNum == currentDay
+                                    
+                                    val cellBg = when {
+                                        isCompleted -> AccentGreen
+                                        isCurrent -> VibrantPrimary
+                                        else -> VibrantSecondary.copy(alpha = 0.3f)
+                                    }
+                                    val cellBorderColor = when {
+                                        isCurrent -> AccentGreen
+                                        else -> Color.Transparent
+                                    }
+                                    val cellTextColor = when {
+                                        isCompleted || isCurrent -> Color.White
+                                        else -> VibrantTextMedium
+                                    }
+                                    
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(1f)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(cellBg)
+                                            .border(
+                                                width = if (isCurrent) 2.dp else 0.dp,
+                                                color = cellBorderColor,
+                                                shape = RoundedCornerShape(6.dp)
+                                            )
+                                            .clickable { selectedCalendarDay = dayNum }
+                                    ) {
+                                        Text(
+                                            text = "$dayNum",
+                                            color = cellTextColor,
+                                            fontSize = 9.sp,
+                                            fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Explanatory legend
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(AccentGreen))
+                            Text("مكتمل", fontSize = 10.sp, color = VibrantTextMedium)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(VibrantPrimary))
+                            Text("اليوم الحالي", fontSize = 10.sp, color = VibrantTextMedium)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(VibrantSecondary.copy(alpha = 0.3f)))
+                            Text("قادم", fontSize = 10.sp, color = VibrantTextMedium)
+                        }
+                    }
+                }
+            }
+            
+            // Render the dialog if a day is clicked
+            selectedCalendarDay?.let { clickedDay ->
+                val dailyContent = Daily90Data.getDailyContent(clickedDay, isAthlete)
+                
+                Dialog(onDismissRequest = { selectedCalendarDay = null }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                        border = BorderStroke(1.dp, VibrantBorder)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Header
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "تفاصيل اليوم $clickedDay 🏆",
+                                    color = VibrantPrimary,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                val statusText = when {
+                                    clickedDay < currentDay -> "مكتمل بنجاح ✅"
+                                    clickedDay == currentDay -> "أنت هنا الآن ⚡"
+                                    else -> "اليوم القادم 🔒"
+                                }
+                                val statusColor = when {
+                                    clickedDay < currentDay -> AccentGreen
+                                    clickedDay == currentDay -> VibrantPrimary
+                                    else -> VibrantTextMedium
+                                }
+                                Text(
+                                    text = statusText,
+                                    color = statusColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            HorizontalDivider(color = VibrantBorder)
+                            
+                            // Challenge block
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(VibrantSecondary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "🎯 تحدي اليوم الحاسم:",
+                                    color = VibrantPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = dailyContent.challenge,
+                                    color = VibrantTextDark,
+                                    fontSize = 12.sp,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                            
+                            // Tip block
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(VibrantBackground, RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "💡 نصيحة الصمود والتعافي:",
+                                    color = AccentGreen,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = dailyContent.tip,
+                                    color = VibrantTextDark,
+                                    fontSize = 12.sp,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                            
+                            // Bottom Action button
+                            Button(
+                                onClick = { selectedCalendarDay = null },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = VibrantPrimary)
+                            ) {
+                                Text("فهمت، سأبقى مستقيماً وصامداً! ✊", color = Color.White, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Today's specific Challenge & Tip card
+        item {
+            val todayContent = Daily90Data.getDailyContent(currentDay, isAthlete)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSecondary.copy(alpha = 0.5f)),
+                border = BorderStroke(1.dp, VibrantPrimary.copy(alpha = 0.2f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("🎯", fontSize = 20.sp)
+                        Text(
+                            text = "مهمتك الصمودية اليوم (اليوم $currentDay من 90) :",
+                            color = VibrantPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                    Text(
+                        text = todayContent.challenge,
+                        color = VibrantTextDark,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 18.sp
+                    )
+                    
+                    HorizontalDivider(color = VibrantBorder.copy(alpha = 0.5f))
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("💡", fontSize = 18.sp)
+                        Text(
+                            text = "نصيحة اليوم للتعافي العصبي والجسدي:",
+                            color = AccentGreen,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+                    Text(
+                        text = todayContent.tip,
+                        color = VibrantTextMedium,
+                        fontSize = 11.sp,
+                        lineHeight = 17.sp
                     )
                 }
             }
@@ -931,11 +1213,10 @@ fun ChatScreen(viewModel: TatbiqatiViewModel) {
                             .border(1.dp, strokeColor, RoundedCornerShape(16.dp))
                             .padding(12.dp)
                     ) {
-                        Text(
+                        FormattedChatMessageText(
                             text = message.text,
-                            color = textColor,
-                            fontSize = 12.sp,
-                            lineHeight = 18.sp
+                            isUser = isUser,
+                            textColor = textColor
                         )
                     }
                 }
@@ -1743,4 +2024,45 @@ fun FormattedReportText(text: String) {
         }
     }
 }
+
+@Composable
+fun FormattedChatMessageText(text: String, isUser: Boolean, textColor: Color) {
+    val lines = text.split("\n")
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        lines.forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) return@forEach
+            
+            when {
+                trimmed.startsWith("*") || trimmed.startsWith("-") -> {
+                    val cleanLine = if (trimmed.startsWith("*")) trimmed.substring(1).trim() else trimmed.substring(1).trim()
+                    Row(
+                        modifier = Modifier.padding(start = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("•", color = if (isUser) Color.White else VibrantPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(
+                            text = cleanLine.replace("**", ""),
+                            color = textColor,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp
+                        )
+                    }
+                }
+                else -> {
+                    Text(
+                        text = trimmed.replace("**", ""),
+                        color = textColor,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        fontWeight = if (trimmed.startsWith("⚠️") || trimmed.startsWith("🚨") || trimmed.startsWith("💡") || trimmed.startsWith("🎯") || trimmed.startsWith("🔥") || trimmed.startsWith("🌱") || trimmed.startsWith("🏆") || trimmed.startsWith("🛡️")) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+    }
+}
+
 
