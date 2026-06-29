@@ -1,5 +1,5 @@
 {
-  "name": "تطبيقاتي",
+  "name": "استقامة",
   "description": "تطبيق ذكي لدعم الشباب والرياضيين في رحلة التعافي والنمو الشخصي خلال 90 يوماً.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

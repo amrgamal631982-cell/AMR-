@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TatbiqatiAppScreen(viewModel: TatbiqatiViewModel) {
-    var selectedTab by remember { mutableStateOf("dashboard") } // "dashboard", "chat", "sos"
+    var selectedTab by remember { mutableStateOf("dashboard") } // "dashboard", "chat", "harms", "tips", "sos"
     val isEmergencyMode = viewModel.isEmergencyMode
 
     // Auto switch to SOS screen if emergency mode is active
@@ -141,6 +141,8 @@ fun TatbiqatiAppScreen(viewModel: TatbiqatiViewModel) {
             when (selectedTab) {
                 "dashboard" -> DashboardScreen(viewModel = viewModel)
                 "chat" -> ChatScreen(viewModel = viewModel)
+                "harms" -> HarmsScreen(viewModel = viewModel)
+                "tips" -> TipsScreen(viewModel = viewModel)
                 "sos" -> EmergencyScreen(viewModel = viewModel)
             }
         }
@@ -154,7 +156,7 @@ fun BottomNavigationBar(selectedTab: String, onTabSelected: (String) -> Unit) {
             .fillMaxWidth()
             .background(VibrantSurface) // Clean white/surface background
             .border(width = 1.dp, color = VibrantBorder, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(vertical = 12.dp, horizontal = 12.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -166,14 +168,28 @@ fun BottomNavigationBar(selectedTab: String, onTabSelected: (String) -> Unit) {
             onClick = { onTabSelected("dashboard") }
         )
         NavBarItem(
-            title = "المدرب الذكي",
+            title = "المدرب",
             icon = Icons.Default.Person,
             isSelected = selectedTab == "chat",
             tag = "chat_tab",
             onClick = { onTabSelected("chat") }
         )
         NavBarItem(
-            title = "إنقاذ SOS",
+            title = "الأضرار",
+            icon = Icons.Default.Info,
+            isSelected = selectedTab == "harms",
+            tag = "harms_tab",
+            onClick = { onTabSelected("harms") }
+        )
+        NavBarItem(
+            title = "النصائح",
+            icon = Icons.Default.List,
+            isSelected = selectedTab == "tips",
+            tag = "tips_tab",
+            onClick = { onTabSelected("tips") }
+        )
+        NavBarItem(
+            title = "SOS",
             icon = Icons.Default.Warning,
             isSelected = selectedTab == "sos",
             tag = "sos_tab",
@@ -1341,5 +1357,390 @@ fun EmergencyTip(text: String) {
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(text = "Hello $name!", modifier = modifier)
+}
+
+@Composable
+fun HarmsScreen(viewModel: TatbiqatiViewModel) {
+    val harmsResult = viewModel.aiHarmsResult
+    val isLoading = viewModel.isHarmsLoading
+    val errorMsg = viewModel.harmsError
+
+    // Automatically generate harms on first enter if not loaded yet
+    LaunchedEffect(Unit) {
+        if (harmsResult == null && !isLoading) {
+            viewModel.generateAiHarms()
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("harms_screen_scroll"),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(Brush.linearGradient(listOf(Color(0xFFFF5252), Color(0xFFFF7A7A))))
+                        .padding(20.dp)
+                ) {
+                    Text(
+                        text = "تقرير أضرار الإدمان السلوكي ⚠️🧠",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "تحليل طبي بيولوجي مخصص لحالتك بناءً على مسار صمودك ومستوى مجهودك البدني والذهني.",
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+
+        // Action / Status Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                border = BorderStroke(1.dp, VibrantBorder)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "يمكنك إعادة توليد التقرير المحدث في أي وقت للحصول على قراءة متطورة لحالة تعافي دماغك وجسدك.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = VibrantTextMedium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+
+                    Button(
+                        onClick = { viewModel.generateAiHarms() },
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .testTag("regenerate_harms_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = VibrantPrimary)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.5.dp
+                            )
+                        } else {
+                            Text(
+                                text = "توليد تقرير الأضرار بالذكاء الاصطناعي 🧬🔬",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Report Content or Loading State
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                border = BorderStroke(1.dp, VibrantBorder)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    if (isLoading) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = VibrantPrimary
+                            )
+                            Text(
+                                text = "جاري استشارة الذكاء الاصطناعي لفحص كيمياء الدماغ ومستقبلات الدوبامين عصبياً وجسدياً...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = VibrantTextMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    } else if (errorMsg != null && harmsResult == null) {
+                        Text(
+                            text = errorMsg,
+                            color = VibrantSOSBorder,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else if (harmsResult != null) {
+                        Column {
+                            if (errorMsg != null) {
+                                Text(
+                                    text = "⚠️ $errorMsg",
+                                    color = VibrantSOSBorder,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                            }
+                            FormattedReportText(text = harmsResult)
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "اضغط على الزر في الأعلى لتوليد تقريرك الطبي المخصص للتعافي بالكامل.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = VibrantTextMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TipsScreen(viewModel: TatbiqatiViewModel) {
+    val tipsResult = viewModel.aiTipsResult
+    val isLoading = viewModel.isTipsLoading
+    val errorMsg = viewModel.tipsError
+
+    // Automatically generate tips on first enter if not loaded yet
+    LaunchedEffect(Unit) {
+        if (tipsResult == null && !isLoading) {
+            viewModel.generateAiTips()
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("tips_screen_scroll"),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(Brush.linearGradient(listOf(VibrantSecondary, VibrantPrimaryGradientEnd)))
+                        .padding(20.dp)
+                ) {
+                    Text(
+                        text = "مستشار الصمود والتوجيه اليومي 🎯💡",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "احصل على نصيحة حماسيّة، تكتيك ذهني فوري لسحق الرغبة، وتحدٍّ صغير مصمم لمدى تقدمك.",
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+
+        // Action / Status Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                border = BorderStroke(1.dp, VibrantBorder)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "نصائح الصمود تتجدد يومياً لتتماشى مع روتينك وتساعدك على كبح الرغبات وإطلاق إبداعك وطاقتك.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = VibrantTextMedium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+
+                    Button(
+                        onClick = { viewModel.generateAiTips() },
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .testTag("regenerate_tips_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = VibrantSecondary)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.5.dp
+                            )
+                        } else {
+                            Text(
+                                text = "توليد تكتيك ونصيحة الصمود اليوم ⚡🚀",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Report Content or Loading State
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = VibrantSurface),
+                border = BorderStroke(1.dp, VibrantBorder)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    if (isLoading) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = VibrantSecondary
+                            )
+                            Text(
+                                text = "جاري تحضير تكتيكات الصمود اليومية وصياغة تحدي سحق الرغبات المخصص لك...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = VibrantTextMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    } else if (errorMsg != null && tipsResult == null) {
+                        Text(
+                            text = errorMsg,
+                            color = VibrantSOSBorder,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else if (tipsResult != null) {
+                        Column {
+                            if (errorMsg != null) {
+                                Text(
+                                    text = "⚠️ $errorMsg",
+                                    color = VibrantSOSBorder,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                            }
+                            FormattedReportText(text = tipsResult)
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "اضغط على الزر في الأعلى لتوليد تكتيك ونصائح الصمود المخصصة لك اليوم.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = VibrantTextMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FormattedReportText(text: String) {
+    val lines = text.split("\n")
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        lines.forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) return@forEach
+            
+            when {
+                trimmed.startsWith("⚠️") || trimmed.startsWith("🎯") || trimmed.startsWith("🔥") || trimmed.startsWith("🧠") || trimmed.startsWith("🌟") || trimmed.startsWith("🏋️‍♂️") -> {
+                    Text(
+                        text = trimmed.replace("**", ""),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = VibrantTextDark,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
+                trimmed.startsWith("*") || trimmed.startsWith("-") -> {
+                    // Bullet item
+                    val cleanLine = if (trimmed.startsWith("*")) trimmed.substring(1).trim() else trimmed.substring(1).trim()
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("•", style = MaterialTheme.typography.bodyLarge, color = VibrantPrimary, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = cleanLine.replace("**", ""),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = VibrantTextMedium
+                        )
+                    }
+                }
+                else -> {
+                    Text(
+                        text = trimmed.replace("**", ""),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = VibrantTextMedium,
+                        lineHeight = 24.sp
+                    )
+                }
+            }
+        }
+    }
 }
 
